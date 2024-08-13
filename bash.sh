@@ -131,8 +131,8 @@ clone_neovim_repo() {
   log "Cloning Neovim repository..."
 
   if [[ -d "$NEOVIM_DIR" ]]; then
-    log "Neovim directory already exists. Removing it..."
-    rm -rf "$NEOVIM_DIR"
+    log "Neovim directory already exists. Skipping clone."
+    return
   fi
 
   if git clone "$NEOVIM_REPO" "$NEOVIM_DIR"; then
@@ -163,11 +163,16 @@ build_and_install_neovim() {
   fi
 }
 
-install_dependencies
-clone_neovim_repo
-build_and_install_neovim
+# Check if Neovim is already installed
+if [[ -n "$NVIM_BIN" ]]; then
+  log "Neovim is already installed at '$NVIM_BIN'. Skipping build."
+else
+  install_dependencies
+  clone_neovim_repo
+  build_and_install_neovim
+fi
 
-log "Neovim has been built and installed successfully."
+log "Neovim installation process completed."
 
 # Wezterm
 WEZTERM_REPO="https://github.com/wez/wezterm/releases/latest/download/wezterm.deb"
