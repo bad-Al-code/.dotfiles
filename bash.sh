@@ -168,3 +168,57 @@ clone_neovim_repo
 build_and_install_neovim
 
 log "Neovim has been built and installed successfully."
+
+# Wezterm
+WEZTERM_REPO="https://github.com/wez/wezterm/releases/latest/download/wezterm.deb"
+WEZTERM_DEB="$HOME/wezterm.deb"
+
+install_dependencies() {
+  log "Installing dependencies for WezTerm..."
+
+  if apt update $APT_OPTIONS; then
+    log "Package list updated successfully."
+  else
+    log "Failed to update package list."
+    exit 1
+  fi
+
+  if apt install $APT_OPTIONS wget gdebi-core; then
+    log "Dependencies installed successfully."
+  else
+    log "Failed to install dependencies."
+    exit 1
+  fi
+}
+
+download_wezterm() {
+  log "Downloading WezTerm..."
+
+  if wget -O "$WEZTERM_DEB" "$WEZTERM_REPO"; then
+    log "WezTerm downloaded successfully."
+  else
+    log "Failed to download WezTerm."
+    exit 1
+  fi
+}
+
+install_wezterm() {
+  log "Installing WezTerm..."
+
+  if gdebi $APT_OPTIONS "$WEZTERM_DEB"; then
+    log "WezTerm installed successfully."
+  else
+    log "Failed to install WezTerm."
+    exit 1
+  fi
+
+  # Clean up the .deb file
+  rm "$WEZTERM_DEB"
+  log "Cleaned up temporary files."
+}
+
+install_dependencies
+download_wezterm
+install_wezterm
+
+log "WezTerm has been installed successfully."
