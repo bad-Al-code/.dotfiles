@@ -7,6 +7,29 @@ LOG_FILE="$HOME/dotfiles_update.log"
 DATE_TIME=$(date +"%Y-%m-%d %H:%M:%S")
 APT_OPTIONS="-y"
 
+PACKAGES=(
+  vim
+  curl
+  wget
+  p7zip-full
+  ffmpeg
+  tmux
+  build-essential
+  i3
+  i3status
+  software-properties-common
+  nitrogen
+  btop
+  obs-studio
+  tree
+  usb-creator-gtk
+  cmake
+  gpg
+  xclip
+  picom
+  htop
+)
+
 log() {
   echo "$DATE_TIME - $SCRIPT_NAME: $1" | tee -a "$LOG_FILE"
 }
@@ -37,3 +60,27 @@ update_system() {
 }
 
 update_system
+
+install_packages() {
+  log "Starting package installation..."
+
+  if apt update $APT_OPTIONS; then
+    log "Package list updated successfully."
+  else
+    log "Failed to update package list."
+    exit 1
+  fi
+
+  for package in "${PACKAGES[@]}"; do
+    if apt install $APT_OPTIONS "$package"; then
+      log "Package '$package' installed successfully."
+    else
+      log "Failed to install package '$package'."
+      exit 1
+    fi
+  done
+
+  log "All packages installed successfully."
+}
+
+install_packages
