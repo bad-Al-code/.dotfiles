@@ -227,3 +227,81 @@ download_wezterm
 install_wezterm
 
 log "WezTerm has been installed successfully."
+
+# Docker
+if [[ $EUID -ne 0 ]]; then
+  log "This script must be run as root. Exiting."
+  exit 1
+fi
+
+install_docker() {
+  log "Installing Docker dependencies..."
+
+  if apt update $APT_OPTIONS; then
+    log "Package list updated successfully."
+  else
+    log "Failed to update package list."
+    exit 1
+  fi
+
+  if apt install $APT_OPTIONS \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common; then
+    log "Dependencies installed successfully."
+  else
+    log "Failed to install dependencies."
+    exit 1
+  fi
+
+  if curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg; then
+    log "Docker GPG key added successfully."
+  else
+    log "Failed to add Docker GPG key."
+    exit 1
+  fi
+
+  if echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null; then
+    log "Docker repository added successfully."
+  else
+    log "Failed to add Docker repository."
+    exit 1
+  fi
+
+  if apt update $APT_OPTIONS; then
+    log "Package list updated with Docker repository."
+  else
+    log "Failed to update package list after adding Docker repository."
+    exit 1
+  fi
+
+  if apt install $APT_OPTIONS docker-ce docker-ce-cli containerd.io; then
+    log "Docker installed successfully."
+  else
+    log "Failed to install Docker."
+    exit 1
+  fi
+
+  # Enable Docker to start on boot
+  if systemctl enable docker; then
+    log "Docker service enabled to start on boot."
+  else
+    log "Failed to enable Docker service."
+    exit 1
+  fi
+
+  # Start Docker service
+  if systemctl start docker; then
+    log "Docker service started successfully."
+  else
+    log "Failed to start Docker service."
+    exit 1
+  fi
+
+  log "Docker installation completed."
+}
+
+install_docker
