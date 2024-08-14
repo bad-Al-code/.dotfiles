@@ -351,3 +351,70 @@ handle_existing_dotfiles
 clone_repo
 
 log "Repository setup completed."
+
+# symlink
+DOTFILES_DIR="$HOME/dotfiles"
+TARGET_DIR="$HOME/.config"
+
+DIRECTORIES=(
+  "bash"
+  "bat"
+  "btop"
+  "git"
+  "i3"
+  "i3status"
+  "k9s"
+  "lazygit"
+  "neofetch"
+  "nitrogen"
+  "nvim"
+  "p10k"
+  "picom"
+  "rofi"
+  "starship"
+  "tmux"
+  "ulauncher"
+)
+
+create_symlink() {
+  local src=$1
+  local dest=$2
+
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    echo "Skipping: $dest already exists."
+  else
+    ln -s "$src" "$dest"
+    echo "Created symlink: $dest -> $src"
+  fi
+}
+
+for dir in "${DIRECTORIES[@]}"; do
+  src="$DOTFILES_DIR/.config/$dir"
+  dest="$TARGET_DIR/$dir"
+
+  # Check if source directory exists
+  if [ -d "$src" ]; then
+    create_symlink "$src" "$dest"
+  else
+    echo "Warning: $src does not exist."
+  fi
+done
+
+INDIVIDUAL_FILES=(
+  "$DOTFILES_DIR/.bashrc"
+  "$DOTFILES_DIR/.vimrc"
+  "$DOTFILES_DIR/.tmux.conf"
+)
+
+for file in "${INDIVIDUAL_FILES[@]}"; do
+  dest="$HOME/$(basename $file)"
+
+  # Check if source file exists
+  if [ -f "$file" ]; then
+    create_symlink "$file" "$dest"
+  else
+    echo "Warning: $file does not exist."
+  fi
+done
+
+echo "Symlink setup completed."
