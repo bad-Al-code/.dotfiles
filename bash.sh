@@ -305,3 +305,127 @@ install_docker() {
 }
 
 install_docker
+
+# Clone dotfiles
+GITHUB_REPO="https://github.com/HeyBadAl/dotfiles"
+CLONE_DIR="$HOME/dotfiles"
+
+if [[ $EUID -ne 0 ]]; then
+  log "This script must be run as root or with sudo privileges. Exiting."
+  exit 1
+fi
+
+# check if git is installed
+check_git() {
+  if command -v git &>/dev/null; then
+    log "Git is already installed."
+  else
+    log "Git is not installed. Installing Git..."
+    apt update -y && apt install -y git
+    log "Git installed successfully."
+  fi
+}
+
+# handle if dotfiles is already exits
+handle_existing_dotfiles() {
+  if [[ -d "$CLONE_DIR" ]]; then
+    log "Directory '$CLONE_DIR' already exists."
+    log "Backing up existing directory to '$BACKUP_DIR'..."
+    mv "$CLONE_DIR" "$BACKUP_DIR"
+    log "Backup completed successfully."
+  fi
+}
+
+clone_repo() {
+  if [[ -d "$CLONE_DIR" ]]; then
+    log "Directory '$CLONE_DIR' already exists. Skipping clone."
+  else
+    log "Cloning repository from '$GITHUB_REPO' to '$CLONE_DIR'..."
+    git clone "$GITHUB_REPO" "$CLONE_DIR"
+    log "Repository cloned successfully."
+  fi
+}
+
+check_git
+handle_existing_dotfiles
+clone_repo
+
+log "Repository setup completed."
+
+# symlink
+DOTFILES_DIR="$HOME/dotfiles"
+TARGET_DIR="$HOME/.config"
+
+DIRECTORIES=(
+  "bash"
+  "bat"
+  "btop"
+  "git"
+  "i3"
+  "i3status"
+  "k9s"
+  "lazygit"
+  "neofetch"
+  "nitrogen"
+  "nvim"
+  "p10k"
+  "picom"
+  "rofi"
+  "starship"
+  "tmux"
+  "ulauncher"
+)
+
+create_symlink() {
+  local src=$1
+  local dest=$2
+
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    if [ -d "$dest" ]; then
+      echo "Removing existing directory: $dest"
+      rm -rf "$dest"
+    elif [ -f "$dest" ]; then
+      echo "Removing existing file: $dest"
+      rm "$dest"
+    fi
+  fi
+
+  ln -s "$src" "$dest"
+  echo "Created symlink: $dest -> $src"
+}
+
+for dir in "${DIRECTORIES[@]}"; do
+  src="$DOTFILES_DIR/.config/$dir"
+  dest="$TARGET_DIR/$dir"
+
+  # Check if source directory exists
+  if [ -d "$src" ]; then
+    # Ensure target directory exists or create it
+    if [ ! -d "$TARGET_DIR" ]; then
+      echo "Creating target directory: $TARGET_DIR"
+      mkdir -p "$TARGET_DIR"
+    fi
+    create_symlink "$src" "$dest"
+  else
+    echo "Warning: $src does not exist."
+  fi
+done
+
+INDIVIDUAL_FILES=(
+  "$DOTFILES_DIR/.bashrc"
+  "$DOTFILES_DIR/.vimrc"
+  "$DOTFILES_DIR/.tmux.conf"
+)
+
+for file in "${INDIVIDUAL_FILES[@]}"; do
+  dest="$HOME/$(basename $file)"
+
+  # Check if source file exists
+  if [ -f "$file" ]; then
+    create_symlink "$file" "$dest"
+  else
+    echo "Warning: $file does not exist."
+  fi
+done
+
+echo "Symlink setup completed."
