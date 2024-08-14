@@ -305,3 +305,38 @@ install_docker() {
 }
 
 install_docker
+
+# Clone dotfiles
+GITHUB_REPO="https://github.com/HeyBadAl/dotfiles"
+CLONE_DIR="$HOME/dotfiles"
+
+if [[ $EUID -ne 0 ]]; then
+  log "This script must be run as root or with sudo privileges. Exiting."
+  exit 1
+fi
+
+# check if git is installed
+check_git() {
+  if command -v git &>/dev/null; then
+    log "Git is already installed."
+  else
+    log "Git is not installed. Installing Git..."
+    apt update -y && apt install -y git
+    log "Git installed successfully."
+  fi
+}
+
+clone_repo() {
+  if [[ -d "$CLONE_DIR" ]]; then
+    log "Directory '$CLONE_DIR' already exists. Skipping clone."
+  else
+    log "Cloning repository from '$GITHUB_REPO' to '$CLONE_DIR'..."
+    git clone "$GITHUB_REPO" "$CLONE_DIR"
+    log "Repository cloned successfully."
+  fi
+}
+
+check_git
+clone_repo
+
+log "Repository setup completed."
