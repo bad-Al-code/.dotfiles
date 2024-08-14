@@ -326,6 +326,16 @@ check_git() {
   fi
 }
 
+# handle if dotfiles is already exits
+handle_existing_dotfiles() {
+  if [[ -d "$CLONE_DIR" ]]; then
+    log "Directory '$CLONE_DIR' already exists."
+    log "Backing up existing directory to '$BACKUP_DIR'..."
+    mv "$CLONE_DIR" "$BACKUP_DIR"
+    log "Backup completed successfully."
+  fi
+}
+
 clone_repo() {
   if [[ -d "$CLONE_DIR" ]]; then
     log "Directory '$CLONE_DIR' already exists. Skipping clone."
@@ -337,6 +347,7 @@ clone_repo() {
 }
 
 check_git
+handle_existing_dotfiles
 clone_repo
 
 log "Repository setup completed."
