@@ -381,11 +381,17 @@ create_symlink() {
   local dest=$2
 
   if [ -e "$dest" ] || [ -L "$dest" ]; then
-    echo "Skipping: $dest already exists."
-  else
-    ln -s "$src" "$dest"
-    echo "Created symlink: $dest -> $src"
+    if [ -d "$dest" ]; then
+      echo "Removing existing directory: $dest"
+      rm -rf "$dest"
+    elif [ -f "$dest" ]; then
+      echo "Removing existing file: $dest"
+      rm "$dest"
+    fi
   fi
+
+  ln -s "$src" "$dest"
+  echo "Created symlink: $dest -> $src"
 }
 
 for dir in "${DIRECTORIES[@]}"; do
@@ -394,6 +400,11 @@ for dir in "${DIRECTORIES[@]}"; do
 
   # Check if source directory exists
   if [ -d "$src" ]; then
+    # Ensure target directory exists or create it
+    if [ ! -d "$TARGET_DIR" ]; then
+      echo "Creating target directory: $TARGET_DIR"
+      mkdir -p "$TARGET_DIR"
+    fi
     create_symlink "$src" "$dest"
   else
     echo "Warning: $src does not exist."
