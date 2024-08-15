@@ -164,6 +164,7 @@ build_and_install_neovim() {
 }
 
 # Check if Neovim is already installed
+NVIM_BIN=$(command -v nvim || echo "")
 if [[ -n "$NVIM_BIN" ]]; then
   log "Neovim is already installed at '$NVIM_BIN'. Skipping build."
 else
