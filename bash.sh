@@ -175,10 +175,7 @@ fi
 
 log "Neovim installation process completed."
 
-# Wezterm
-WEZTERM_REPO="https://github.com/wez/wezterm/releases/latest/download/wezterm.deb"
-WEZTERM_DEB="$HOME/wezterm.deb"
-
+# wezterm
 install_dependencies() {
   log "Installing dependencies for WezTerm..."
 
@@ -189,7 +186,7 @@ install_dependencies() {
     exit 1
   fi
 
-  if apt install $APT_OPTIONS wget gdebi-core; then
+  if apt install $APT_OPTIONS curl gpg apt-transport-https; then
     log "Dependencies installed successfully."
   else
     log "Failed to install dependencies."
@@ -197,13 +194,20 @@ install_dependencies() {
   fi
 }
 
-download_wezterm() {
-  log "Downloading WezTerm..."
+add_wezterm_repo() {
+  log "Adding WezTerm APT repository..."
 
-  if wget -O "$WEZTERM_DEB" "$WEZTERM_REPO"; then
-    log "WezTerm downloaded successfully."
+  if curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/share/keyrings/wezterm-fury.gpg; then
+    log "WezTerm GPG key added successfully."
   else
-    log "Failed to download WezTerm."
+    log "Failed to add WezTerm GPG key."
+    exit 1
+  fi
+
+  if echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list; then
+    log "WezTerm repository added successfully."
+  else
+    log "Failed to add WezTerm repository."
     exit 1
   fi
 }
@@ -211,20 +215,23 @@ download_wezterm() {
 install_wezterm() {
   log "Installing WezTerm..."
 
-  if gdebi $APT_OPTIONS "$WEZTERM_DEB"; then
+  if apt update $APT_OPTIONS; then
+    log "Package list updated successfully after adding WezTerm repository."
+  else
+    log "Failed to update package list after adding WezTerm repository."
+    exit 1
+  fi
+
+  if apt install $APT_OPTIONS wezterm; then
     log "WezTerm installed successfully."
   else
     log "Failed to install WezTerm."
     exit 1
   fi
-
-  # Clean up the .deb file
-  rm "$WEZTERM_DEB"
-  log "Cleaned up temporary files."
 }
 
 install_dependencies
-download_wezterm
+add_wezterm_repo
 install_wezterm
 
 log "WezTerm has been installed successfully."
