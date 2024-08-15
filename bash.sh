@@ -335,6 +335,7 @@ check_git() {
 }
 
 # handle if dotfiles is already exits
+BACKUP_DIR="$HOME/dotfiles_backup"
 handle_existing_dotfiles() {
   if [[ -d "$CLONE_DIR" ]]; then
     log "Directory '$CLONE_DIR' already exists."
@@ -418,22 +419,3 @@ for dir in "${DIRECTORIES[@]}"; do
     echo "Warning: $src does not exist."
   fi
 done
-
-INDIVIDUAL_FILES=(
-  "$DOTFILES_DIR/.bashrc"
-  "$DOTFILES_DIR/.vimrc"
-  "$DOTFILES_DIR/.tmux.conf"
-)
-
-for file in "${INDIVIDUAL_FILES[@]}"; do
-  dest="$HOME/$(basename $file)"
-
-  # Check if source file exists
-  if [ -f "$file" ]; then
-    create_symlink "$file" "$dest"
-  else
-    echo "Warning: $file does not exist."
-  fi
-done
-
-echo "Symlink setup completed."
