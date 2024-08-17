@@ -335,7 +335,11 @@ check_git() {
 }
 
 # handle if dotfiles is already exits
-BACKUP_DIR="$HOME/dotfiles_backup"
+BACKUP_DIR="$HOME/dotfiles_backup/$(date +%Y%m%d_%H%M%S)"
+
+echo "Creating backup directory: $BACKUP_DIR"
+mkdir -p "$BACKUP_DIR"
+
 handle_existing_dotfiles() {
   if [[ -d "$CLONE_DIR" ]]; then
     log "Directory '$CLONE_DIR' already exists."
