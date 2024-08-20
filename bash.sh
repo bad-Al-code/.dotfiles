@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+source "$(dirname "$0")/scripts/input_validation.sh"
+parse_arguments "$@"
+
 SCRIPT_NAME=$(basename "$0")
 LOG_FILE="$HOME/dotfiles_update.log"
 DATE_TIME=$(date +"%Y-%m-%d %H:%M:%S")
@@ -36,7 +39,14 @@ update_system() {
   log "System update and upgrade completed."
 }
 
-update_system
+if [[ $SKIP_UPGRADE == true ]]; then
+  echo "Skipping system upgrade..."
+else
+  echo "Proceeding with system upgrade..."
+  update_system
+fi
+
+echo "Running the script as user: $USERNAME"
 
 PACKAGES=(
   vim
